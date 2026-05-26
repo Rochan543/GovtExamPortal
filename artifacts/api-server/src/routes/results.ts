@@ -74,7 +74,7 @@ router.get("/results/:attemptId", authenticate, async (req: AuthRequest, res): P
       marks: questionsTable.marks,
       explanation: questionsTable.explanation,
       sectionId: questionsTable.sectionId,
-    }).from(questionsTable).where(eq(questionsTable.examId, attempt.entityId));
+    }).from(questionsTable).where(eq(questionsTable.quizId, attempt.entityId));
   } else if (attempt.entityType === "TOPIC_MOCK") {
     const [mock] = await db.select().from(topicMocksTable).where(eq(topicMocksTable.id, attempt.entityId));
     examTitle = mock?.title ?? null;
@@ -90,7 +90,7 @@ router.get("/results/:attemptId", authenticate, async (req: AuthRequest, res): P
         marks: questionsTable.marks,
         explanation: questionsTable.explanation,
         sectionId: questionsTable.sectionId,
-      }).from(questionsTable).where(eq(questionsTable.topicId, mock.topicId));
+      }).from(questionsTable).where(eq(questionsTable.topicMockId, attempt.entityId));
     }
   }
 
@@ -107,7 +107,9 @@ router.get("/results/:attemptId", authenticate, async (req: AuthRequest, res): P
       optionD: q.optionD,
       selectedOption: answer?.selectedOption ?? null,
       correctAnswer: q.correctAnswer,
-      isCorrect: answer?.selectedOption === q.correctAnswer,
+      isCorrect:
+        answer?.selectedOption?.trim().toUpperCase() ===
+        q.correctAnswer?.trim().toUpperCase(),
       markedForReview: answer?.markedForReview ?? false,
       marks: q.marks,
       explanation: q.explanation,
@@ -125,7 +127,13 @@ router.get("/results/:attemptId", authenticate, async (req: AuthRequest, res): P
     for (const q of sectionQuestions) {
       const answer = answers.find(a => a.questionId === q.id);
       if (!answer || !answer.selectedOption) { skipped++; }
-      else if (answer.selectedOption === q.correctAnswer) { correct++; score += q.marks; }
+     else if (
+        answer.selectedOption?.trim().toUpperCase() ===
+        q.correctAnswer?.trim().toUpperCase()
+      ) {
+        correct++;
+        score += q.marks;
+      }
       else { wrong++; }
     }
     return { sectionId: section.id, sectionName: section.name, correct, wrong, skipped, score, timeTaken: null };

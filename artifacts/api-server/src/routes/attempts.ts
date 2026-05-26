@@ -41,20 +41,49 @@ router.post("/attempts", authenticate, async (req: AuthRequest, res): Promise<vo
   }
 
   // Get entity details for timeRemaining
-  let duration = 60;
-  if (entityType === "EXAM") {
-    const [exam] = await db.select().from(examsTable).where(eq(examsTable.id, entityId));
-    if (!exam) { res.status(404).json({ error: "Exam not found" }); return; }
-    duration = exam.duration;
-  } else if (entityType === "QUIZ") {
-    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, entityId));
-    if (!quiz) { res.status(404).json({ error: "Quiz not found" }); return; }
-    duration = quiz.duration;
-  } else if (entityType === "TOPIC_MOCK") {
-    const [mock] = await db.select().from(topicMocksTable).where(eq(topicMocksTable.id, entityId));
-    if (!mock) { res.status(404).json({ error: "Topic mock not found" }); return; }
-    duration = mock.duration;
+let duration = 60;
+
+if (entityType === "EXAM") {
+  const [exam] = await db
+    .select()
+    .from(examsTable)
+    .where(eq(examsTable.id, entityId));
+
+  if (!exam) {
+    res.status(404).json({ error: "Exam not found" });
+    return;
   }
+
+  duration = exam.duration;
+
+} else if (entityType === "QUIZ") {
+
+  const [quiz] = await db
+    .select()
+    .from(quizzesTable)
+    .where(eq(quizzesTable.id, entityId));
+
+  if (!quiz) {
+    res.status(404).json({ error: "Quiz not found" });
+    return;
+  }
+
+  duration = quiz.duration;
+
+} else if (entityType === "TOPIC_MOCK") {
+
+  const [mock] = await db
+    .select()
+    .from(topicMocksTable)
+    .where(eq(topicMocksTable.id, entityId));
+
+  if (!mock) {
+    res.status(404).json({ error: "Topic mock not found" });
+    return;
+  }
+
+  duration = mock.duration;
+}
 
   const [attempt] = await db.insert(attemptsTable).values({
     userId: req.userId!,
@@ -84,13 +113,23 @@ router.post("/attempts", authenticate, async (req: AuthRequest, res): Promise<vo
     const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, entityId));
     if (quiz) examTitle = quiz.title;
     questions = await db.select().from(questionsTable).where(eq(questionsTable.examId, entityId));
-  } else if (entityType === "TOPIC_MOCK") {
-    const [mock] = await db.select().from(topicMocksTable).where(eq(topicMocksTable.id, entityId));
-    if (mock) {
-      examTitle = mock.title;
-      questions = await db.select().from(questionsTable).where(eq(questionsTable.topicId, mock.topicId));
-    }
+} else if (entityType === "TOPIC_MOCK") {
+
+  const [mock] = await db
+    .select()
+    .from(topicMocksTable)
+    .where(eq(topicMocksTable.id, entityId));
+
+  if (mock) {
+
+    examTitle = mock.title;
+
+    questions = await db
+      .select()
+      .from(questionsTable)
+      .where(eq(questionsTable.topicMockId, entityId));
   }
+}
 
   res.status(201).json({
     ...attempt,
@@ -108,6 +147,18 @@ router.get("/attempts/:id", authenticate, async (req: AuthRequest, res): Promise
   const [attempt] = await db.select().from(attemptsTable)
     .where(and(eq(attemptsTable.id, id), eq(attemptsTable.userId, req.userId!)));
   if (!attempt) { res.status(404).json({ error: "Attempt not found" }); return; }
+//   const [latestAttempt] = await db
+//   .select()
+//   .from(attemptsTable)
+//   .where(eq(attemptsTable.id, id));
+
+// const answers =
+//   ((latestAttempt?.answers ?? []) as Array<{
+//     questionId: number;
+//     selectedOption?: string | null;
+//     markedForReview?: boolean;
+//     timeSpent?: number;
+//   }>);
 
   let questions: Record<string, unknown>[] = [];
   let sections: Record<string, unknown>[] = [];
@@ -115,28 +166,74 @@ router.get("/attempts/:id", authenticate, async (req: AuthRequest, res): Promise
   let duration = 60;
   let hasSectionalTimer = false;
 
-  if (attempt.entityType === "EXAM") {
-    const [exam] = await db.select().from(examsTable).where(eq(examsTable.id, attempt.entityId));
-    if (exam) {
-      examTitle = exam.title;
-      duration = exam.duration;
-      hasSectionalTimer = exam.hasSectionalTimer;
-    }
-    questions = await db.select().from(questionsTable).where(eq(questionsTable.examId, attempt.entityId));
-    sections = await db.select().from(sectionsTable).where(eq(sectionsTable.examId, attempt.entityId));
-  } else if (attempt.entityType === "QUIZ") {
-    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, attempt.entityId));
-    if (quiz) { examTitle = quiz.title; duration = quiz.duration; }
-    questions = await db.select().from(questionsTable).where(eq(questionsTable.examId, attempt.entityId));
-  } else if (attempt.entityType === "TOPIC_MOCK") {
-    const [mock] = await db.select().from(topicMocksTable).where(eq(topicMocksTable.id, attempt.entityId));
-    if (mock) { examTitle = mock.title; duration = mock.duration; }
-    if (attempt.entityType === "TOPIC_MOCK" && attempt.entityId) {
-      const [mock2] = await db.select().from(topicMocksTable).where(eq(topicMocksTable.id, attempt.entityId));
-      if (mock2) questions = await db.select().from(questionsTable).where(eq(questionsTable.topicId, mock2.topicId));
-    }
+if (attempt.entityType === "EXAM") {
+
+  const [exam] = await db
+    .select()
+    .from(examsTable)
+    .where(eq(examsTable.id, attempt.entityId));
+
+  if (exam) {
+    examTitle = exam.title;
+    duration = exam.duration;
+    hasSectionalTimer = exam.hasSectionalTimer;
   }
 
+  questions = await db
+    .select()
+    .from(questionsTable)
+    .where(eq(questionsTable.examId, attempt.entityId));
+
+  sections = await db
+    .select()
+    .from(sectionsTable)
+    .where(eq(sectionsTable.examId, attempt.entityId));
+
+} else if (attempt.entityType === "QUIZ") {
+
+  const [quiz] = await db
+    .select()
+    .from(quizzesTable)
+    .where(eq(quizzesTable.id, attempt.entityId));
+
+  if (quiz) {
+    examTitle = quiz.title;
+    duration = quiz.duration;
+  }
+
+  questions = await db
+    .select()
+    .from(questionsTable)
+    .where(eq(questionsTable.quizId, attempt.entityId));
+
+} else if (attempt.entityType === "TOPIC_MOCK") {
+
+  const [mock] = await db
+    .select()
+    .from(topicMocksTable)
+    .where(eq(topicMocksTable.id, attempt.entityId));
+
+  if (mock) {
+    examTitle = mock.title;
+    duration = mock.duration;
+  }
+
+  if (attempt.entityId) {
+
+    const [mock2] = await db
+      .select()
+      .from(topicMocksTable)
+      .where(eq(topicMocksTable.id, attempt.entityId));
+
+    if (mock2) {
+      questions = await db
+        .select()
+        .from(questionsTable)
+        // .where(eq(questionsTable.topicId, mock2.topicId));
+        .where(eq(questionsTable.topicMockId, attempt.entityId));
+    }
+  }
+}
   res.json({
     ...attempt,
     answers: attempt.answers ?? [],
@@ -169,57 +266,118 @@ router.post("/attempts/:id/submit", authenticate, async (req: AuthRequest, res):
   const [attempt] = await db.select().from(attemptsTable)
     .where(and(eq(attemptsTable.id, id), eq(attemptsTable.userId, req.userId!)));
   if (!attempt) { res.status(404).json({ error: "Attempt not found" }); return; }
+  const [latestAttempt] = await db
+  .select()
+  .from(attemptsTable)
+  .where(eq(attemptsTable.id, id));
+
+const answers =
+  ((latestAttempt?.answers ?? []) as Array<{
+    questionId: number;
+    selectedOption?: string | null;
+    markedForReview?: boolean;
+    timeSpent?: number;
+  }>);
 
   // Get questions to score
-  let questions: { id: number; correctAnswer: string; marks: number; negativeMarks: number; sectionId: number | null }[] = [];
-  if (attempt.entityType === "EXAM") {
+let questions: {
+  id: number;
+  correctAnswer: string;
+  marks: number;
+  negativeMarks: number;
+  sectionId: number | null;
+}[] = [];
+
+if (attempt.entityType === "EXAM") {
+
+  questions = await db.select({
+    id: questionsTable.id,
+    correctAnswer: questionsTable.correctAnswer,
+    marks: questionsTable.marks,
+    negativeMarks: questionsTable.negativeMarks,
+    sectionId: questionsTable.sectionId,
+  })
+  .from(questionsTable)
+  .where(eq(questionsTable.examId, attempt.entityId));
+
+} else if (attempt.entityType === "TOPIC_MOCK") {
+
+  const [mock] = await db
+    .select()
+    .from(topicMocksTable)
+    .where(eq(topicMocksTable.id, attempt.entityId));
+
+  if (mock) {
+
     questions = await db.select({
       id: questionsTable.id,
       correctAnswer: questionsTable.correctAnswer,
       marks: questionsTable.marks,
       negativeMarks: questionsTable.negativeMarks,
       sectionId: questionsTable.sectionId,
-    }).from(questionsTable).where(eq(questionsTable.examId, attempt.entityId));
-  } else if (attempt.entityType === "TOPIC_MOCK") {
-    const [mock] = await db.select().from(topicMocksTable).where(eq(topicMocksTable.id, attempt.entityId));
-    if (mock) {
-      questions = await db.select({
-        id: questionsTable.id,
-        correctAnswer: questionsTable.correctAnswer,
-        marks: questionsTable.marks,
-        negativeMarks: questionsTable.negativeMarks,
-        sectionId: questionsTable.sectionId,
-      }).from(questionsTable).where(eq(questionsTable.topicId, mock.topicId));
-    }
-  } else if (attempt.entityType === "QUIZ") {
-    questions = await db.select({
-      id: questionsTable.id,
-      correctAnswer: questionsTable.correctAnswer,
-      marks: questionsTable.marks,
-      negativeMarks: questionsTable.negativeMarks,
-      sectionId: questionsTable.sectionId,
-    }).from(questionsTable).where(eq(questionsTable.examId, attempt.entityId));
+    })
+    .from(questionsTable)
+    // .where(eq(questionsTable.topicId, mock.topicId));
+    .where(eq(questionsTable.topicMockId, attempt.entityId));
   }
 
-  const answers = (attempt.answers as Array<{ questionId: number; selectedOption?: string | null; markedForReview?: boolean; timeSpent?: number }>) ?? [];
+} else if (attempt.entityType === "QUIZ") {
+
+  questions = await db.select({
+    id: questionsTable.id,
+    correctAnswer: questionsTable.correctAnswer,
+    marks: questionsTable.marks,
+    negativeMarks: questionsTable.negativeMarks,
+    sectionId: questionsTable.sectionId,
+  })
+  .from(questionsTable)
+  .where(eq(questionsTable.quizId, attempt.entityId));
+
+}
+
+  // const answers =
+  // ((req.body.answers ?? attempt.answers ?? []) as Array<{
+  //   questionId: number;
+  //   selectedOption?: string | null;
+  //   markedForReview?: boolean;
+  //   timeSpent?: number;
+  // }>);
+  // const answers =
+  // ((attempt.answers ?? []) as Array<{
+  //   questionId: number;
+  //   selectedOption?: string | null;
+  //   markedForReview?: boolean;
+  //   timeSpent?: number;
+  // }>);
   let totalScore = 0;
   let correctCount = 0;
   let wrongCount = 0;
   let skippedCount = 0;
   const maxScore = questions.reduce((sum, q) => sum + q.marks, 0);
 
-  for (const question of questions) {
-    const answer = answers.find(a => a.questionId === question.id);
-    if (!answer || !answer.selectedOption) {
-      skippedCount++;
-    } else if (answer.selectedOption === question.correctAnswer) {
-      totalScore += question.marks;
-      correctCount++;
-    } else {
-      totalScore -= question.negativeMarks;
-      wrongCount++;
-    }
+for (const question of questions) {
+  const answer = answers.find(
+    (a) => a.questionId === question.id
+  );
+
+  console.log({
+    selected: answer?.selectedOption,
+    correct: question.correctAnswer,
+  });
+
+  if (!answer || !answer.selectedOption) {
+    skippedCount++;
+  } else if (
+    answer.selectedOption?.trim().toUpperCase() ===
+    question.correctAnswer?.trim().toUpperCase()
+  ) {
+    totalScore += question.marks;
+    correctCount++;
+  } else {
+    totalScore -= question.negativeMarks;
+    wrongCount++;
   }
+}
 
   const accuracy = questions.length > 0 ? (correctCount / questions.length) * 100 : 0;
 

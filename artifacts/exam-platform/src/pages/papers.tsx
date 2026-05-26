@@ -16,7 +16,7 @@ export default function PapersPage() {
     <Layout>
       <PageHeader title="Previous Year Papers" subtitle="Download and practice from past exam papers" />
 
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 rounded" />)}
@@ -27,28 +27,28 @@ export default function PapersPage() {
             <p>No papers available yet</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {papers.map((paper) => (
               <Card key={paper.id} data-testid={`card-paper-${paper.id}`}>
                 <CardContent className="pt-4 pb-4">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-sm truncate">{paper.title}</h3>
                       {paper.description && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{paper.description}</p>
                       )}
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
                         <Badge variant="secondary" className="text-xs">{paper.examType}</Badge>
                         {paper.year && <Badge variant="outline" className="text-xs">{paper.year}</Badge>}
                         <Badge variant="outline" className="text-xs uppercase">{paper.fileType}</Badge>
                       </div>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-shrink-0">
                       <Button
                         data-testid={`button-view-${paper.id}`}
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs"
+                        className="h-8 text-xs w-full sm:w-auto"
                         onClick={() => window.open(paper.fileUrl, "_blank")}
                       >
                         <ExternalLink size={12} className="mr-1" /> View

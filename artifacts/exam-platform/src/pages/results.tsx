@@ -17,7 +17,7 @@ export default function ResultsPage() {
     <Layout>
       <PageHeader title="My Results" subtitle="History of all your exam attempts" />
 
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 rounded" />)}
@@ -38,13 +38,13 @@ export default function ResultsPage() {
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => setLocation(`/results/${result.attemptId}`)}
                 >
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-center justify-between">
+                  <CardContent className="pt-3 pb-3 sm:pt-4 sm:pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium break-words">
                           {(result as unknown as { examTitle?: string })?.examTitle ?? "Exam"}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Trophy size={10} /> {result.totalScore}/{result.maxScore} marks
                           </span>
@@ -56,7 +56,7 @@ export default function ResultsPage() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 ml-4">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto sm:ml-4">
                         <Badge
                           data-testid={`badge-result-${result.id}`}
                           variant={pct >= 70 ? "default" : pct >= 40 ? "secondary" : "destructive"}

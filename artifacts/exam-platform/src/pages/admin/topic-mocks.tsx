@@ -76,7 +76,7 @@ export default function AdminTopicMocksPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         {isLoading ? (
           <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 rounded" />)}</div>
         ) : (
@@ -84,15 +84,15 @@ export default function AdminTopicMocksPage() {
             {(mocks ?? []).map((mock) => (
               <Card key={mock.id} data-testid={`card-mock-${mock.id}`}>
                 <CardContent className="pt-3 pb-3">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium truncate">{mock.title}</span>
                         <Badge variant={mock.published ? "default" : "secondary"} className="text-xs flex-shrink-0">
                           {mock.published ? "Published" : "Draft"}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
                         <span>{mock.duration} min</span>
                         <span>{mock.totalMarks} marks</span>
                         {(mock as unknown as { topicName?: string })?.topicName && (
@@ -100,7 +100,7 @@ export default function AdminTopicMocksPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex justify-end gap-1 w-full sm:w-auto">
                       <Button variant="ghost" size="sm" className="h-7" onClick={() => toggleMock.mutate({ id: mock.id })}>
                         {mock.published ? <ToggleRight size={14} className="text-green-500" /> : <ToggleLeft size={14} />}
                       </Button>
@@ -123,7 +123,7 @@ export default function AdminTopicMocksPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-lg">
           <DialogHeader><DialogTitle>Create Topic Mock</DialogTitle></DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit((d) => createMock.mutate({ data: d }))} className="space-y-4">
@@ -150,7 +150,7 @@ export default function AdminTopicMocksPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <FormField control={form.control} name="duration" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Duration (min)</FormLabel>
@@ -173,7 +173,7 @@ export default function AdminTopicMocksPage() {
                   </FormItem>
                 )} />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
                 <Button data-testid="button-save" type="submit" className="flex-1" disabled={createMock.isPending}>Create</Button>
               </div>

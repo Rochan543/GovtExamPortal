@@ -1,10 +1,17 @@
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({
+  path: path.resolve(__dirname, "../../.env"),
+});
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const rawPort = process.env.PORT;
+// const rawPort = process.env.PORT;
+const rawPort = process.env.VITE_PORT;
 
 if (!rawPort) {
   throw new Error(
@@ -58,15 +65,23 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
-  server: {
-    port,
-    strictPort: true,
-    host: "0.0.0.0",
-    allowedHosts: true,
-    fs: {
-      strict: true,
+server: {
+  port,
+  strictPort: true,
+  host: "0.0.0.0",
+  allowedHosts: true,
+
+  proxy: {
+    "/api": {
+      target: "http://localhost:8080",
+      changeOrigin: true,
     },
   },
+
+  fs: {
+    strict: true,
+  },
+},
   preview: {
     port,
     host: "0.0.0.0",

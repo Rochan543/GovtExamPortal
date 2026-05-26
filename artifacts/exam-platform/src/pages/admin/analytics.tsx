@@ -15,20 +15,20 @@ export default function AdminAnalyticsPage() {
     <Layout>
       <PageHeader title="Analytics" subtitle="Platform-wide performance and usage metrics" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-4 lg:p-6 space-y-6">
         {isLoading ? (
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Skeleton className="h-64 rounded" />
             <Skeleton className="h-64 rounded" />
           </div>
         ) : (
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Attempts by date */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-semibold">Attempts Over Time</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-auto">
                 {!analytics?.attemptsByDate || analytics.attemptsByDate.length === 0 ? (
                   <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
                     No data yet
@@ -60,8 +60,8 @@ export default function AdminAnalyticsPage() {
                     No result data yet
                   </div>
                 ) : (
-                  <div className="flex items-center gap-6">
-                    <ResponsiveContainer width="60%" height={200}>
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie
                           data={analytics.scoreDistribution}
@@ -79,7 +79,7 @@ export default function AdminAnalyticsPage() {
                         <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full sm:w-auto">
                       {analytics.scoreDistribution.map((item: { range: string; count: number }, i: number) => (
                         <div key={item.range} data-testid={`row-score-${item.range}`} className="flex items-center gap-2">
                           <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />

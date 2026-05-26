@@ -39,8 +39,8 @@ export default function AdminUsersPage() {
     <Layout>
       <PageHeader title="Users" subtitle={`${(users ?? []).length} students registered`} />
 
-      <div className="p-6 space-y-4">
-        <div className="relative max-w-xs">
+      <div className="p-3 sm:p-4 lg:p-6 space-y-4">
+        <div className="relative w-full sm:max-w-xs">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             data-testid="input-search"
@@ -65,17 +65,17 @@ export default function AdminUsersPage() {
             {filtered.map((user) => (
               <Card key={user.id} data-testid={`card-user-${user.id}`}>
                 <CardContent className="pt-3 pb-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-start sm:items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary flex-shrink-0">
                         {user.name?.[0]?.toUpperCase()}
                       </div>
-                      <div>
-                        <p data-testid={`text-name-${user.id}`} className="text-sm font-medium">{user.name}</p>
-                        <p data-testid={`text-email-${user.id}`} className="text-xs text-muted-foreground">{user.email}</p>
+                      <div className="min-w-0">
+                        <p data-testid={`text-name-${user.id}`} className="text-sm font-medium break-words">{user.name}</p>
+                        <p data-testid={`text-email-${user.id}`} className="text-xs text-muted-foreground break-all">{user.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                       <Badge data-testid={`badge-role-${user.id}`} variant="secondary" className="text-xs">{user.role}</Badge>
                       <span className="text-xs text-muted-foreground hidden sm:block">
                         {new Date(user.createdAt).toLocaleDateString()}

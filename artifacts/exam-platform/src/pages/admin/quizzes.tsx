@@ -76,7 +76,7 @@ export default function AdminQuizzesPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         {isLoading ? (
           <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-14 rounded" />)}</div>
         ) : (
@@ -84,16 +84,16 @@ export default function AdminQuizzesPage() {
             {(quizzes ?? []).map((quiz) => (
               <Card key={quiz.id} data-testid={`card-quiz-${quiz.id}`}>
                 <CardContent className="pt-3 pb-3">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium truncate">{quiz.title}</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium break-words">{quiz.title}</span>
                         <Badge variant={quiz.published ? "default" : "secondary"} className="text-xs flex-shrink-0">{quiz.published ? "Published" : "Draft"}</Badge>
                         <Badge variant="outline" className="text-xs flex-shrink-0">{quiz.quizType}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{quiz.duration} min · {quiz.totalMarks} marks</p>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex justify-end gap-1 w-full sm:w-auto">
                       <Button variant="ghost" size="sm" className="h-7" onClick={() => toggleQuiz.mutate({ id: quiz.id })}>
                         {quiz.published ? <ToggleRight size={14} className="text-green-500" /> : <ToggleLeft size={14} />}
                       </Button>
@@ -116,7 +116,7 @@ export default function AdminQuizzesPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-lg">
           <DialogHeader><DialogTitle>Create Quiz</DialogTitle></DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit((d) => createQuiz.mutate({ data: d }))} className="space-y-4">
@@ -138,7 +138,7 @@ export default function AdminQuizzesPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <FormField control={form.control} name="duration" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Duration (min)</FormLabel>
@@ -161,7 +161,7 @@ export default function AdminQuizzesPage() {
                   </FormItem>
                 )} />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
                 <Button data-testid="button-save" type="submit" className="flex-1" disabled={createQuiz.isPending}>Create</Button>
               </div>

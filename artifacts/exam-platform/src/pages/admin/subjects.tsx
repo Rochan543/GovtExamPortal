@@ -101,7 +101,7 @@ export default function AdminSubjectsPage() {
         }
       />
 
-      <div className="p-6 space-y-3">
+      <div className="p-3 sm:p-4 lg:p-6 space-y-3">
         {isLoading ? (
           <div className="space-y-2">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 rounded" />)}</div>
         ) : (
@@ -111,17 +111,17 @@ export default function AdminSubjectsPage() {
             return (
               <Card key={subject.id} data-testid={`card-subject-${subject.id}`}>
                 <CardContent className="pt-3 pb-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <button
                       data-testid={`button-expand-${subject.id}`}
-                      className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                      className="flex flex-wrap items-center gap-2 text-sm font-medium hover:text-primary transition-colors text-left"
                       onClick={() => toggle(subject.id)}
                     >
                       {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                       {subject.name}
                       <Badge variant="secondary" className="text-xs">{subjectTopics.length} topics</Badge>
                     </button>
-                    <div className="flex gap-1">
+                    <div className="flex justify-end gap-1 w-full sm:w-auto">
                       <Button
                         data-testid={`button-add-topic-${subject.id}`}
                         variant="outline"
@@ -145,7 +145,7 @@ export default function AdminSubjectsPage() {
                   {expanded && subjectTopics.length > 0 && (
                     <div className="mt-3 ml-5 space-y-1">
                       {subjectTopics.map((topic) => (
-                        <div key={topic.id} data-testid={`row-topic-${topic.id}`} className="flex items-center justify-between py-1.5 px-3 rounded hover:bg-muted/50 transition-colors">
+                        <div key={topic.id} data-testid={`row-topic-${topic.id}`} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-1.5 px-3 rounded hover:bg-muted/50 transition-colors">
                           <span className="text-sm">{topic.name}</span>
                           <Button
                             data-testid={`button-delete-topic-${topic.id}`}
@@ -175,7 +175,7 @@ export default function AdminSubjectsPage() {
 
       {/* Add Subject Dialog */}
       <Dialog open={subjectOpen} onOpenChange={setSubjectOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-lg">
           <DialogHeader><DialogTitle>Add Subject</DialogTitle></DialogHeader>
           <Form {...subjectForm}>
             <form onSubmit={subjectForm.handleSubmit((d) => createSubject.mutate({ data: d }))} className="space-y-4">
@@ -193,7 +193,7 @@ export default function AdminSubjectsPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setSubjectOpen(false)}>Cancel</Button>
                 <Button data-testid="button-save-subject" type="submit" className="flex-1" disabled={createSubject.isPending}>Create</Button>
               </div>

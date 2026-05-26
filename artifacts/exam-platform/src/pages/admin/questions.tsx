@@ -4,6 +4,10 @@ import {
   useCreateQuestion, useDeleteQuestion, useUpdateQuestion,
   useListExams, getListExamsQueryKey,
   useListSubjects, getListSubjectsQueryKey,
+  useListQuizzes,
+  getListQuizzesQueryKey,
+  useListTopicMocks,
+  getListTopicMocksQueryKey,
 } from "@workspace/api-client-react";
 import type { Question } from "@workspace/api-client-react";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -33,6 +37,8 @@ const qSchema = z.object({
   negativeMarks: z.coerce.number().default(0),
   difficulty: z.string().optional(),
   examId: z.coerce.number().optional(),
+  quizId: z.coerce.number().optional(),
+  topicMockId: z.coerce.number().optional(),
   year: z.coerce.number().optional(),
 });
 type QForm = z.infer<typeof qSchema>;
@@ -44,8 +50,20 @@ export default function AdminQuestionsPage() {
   const [editing, setEditing] = useState<Question | null>(null);
   const [search, setSearch] = useState("");
   const [filterExamId, setFilterExamId] = useState<string>("");
+  const [importExamId, setImportExamId] = useState("");
+  const [importQuizId, setImportQuizId] = useState("");
+  const [importTopicMockId, setImportTopicMockId] = useState("");
 
   const { data: exams } = useListExams({}, { query: { queryKey: getListExamsQueryKey({}) } });
+  const { data: quizzes } = useListQuizzes(
+  {},
+  { query: { queryKey: getListQuizzesQueryKey({}) } }
+);
+
+const { data: topicMocks } = useListTopicMocks(
+  {},
+  { query: { queryKey: getListTopicMocksQueryKey({}) } }
+);
   const { data: subjects } = useListSubjects({ query: { queryKey: getListSubjectsQueryKey() } });
 
   const params = { ...(filterExamId ? { examId: filterExamId } : {}) };
@@ -109,13 +127,21 @@ export default function AdminQuestionsPage() {
       negativeMarks: q.negativeMarks,
       difficulty: q.difficulty ?? "",
       examId: q.examId ?? undefined,
+      quizId: q.quizId ?? undefined,
+      topicMockId: q.topicMockId ?? undefined,
       year: q.year ?? undefined,
     });
     setOpen(true);
   };
 
   const onSubmit = (data: QForm) => {
-    const payload = { ...data, examId: data.examId || undefined, year: data.year || undefined };
+    const payload = {
+      ...data,
+      examId: data.examId || undefined,
+      quizId: data.quizId || undefined,
+      topicMockId: data.topicMockId || undefined,
+      year: data.year || undefined,
+    };
     if (editing) {
       updateQ.mutate({ id: editing.id, data: payload });
     } else {
@@ -132,11 +158,126 @@ export default function AdminQuestionsPage() {
       <PageHeader
         title="Question Bank"
         subtitle={`${(questions ?? []).length} questions`}
-        actions={
-          <Button data-testid="button-create-question" size="sm" onClick={openCreate}>
-            <Plus size={14} className="mr-1" /> Add Question
-          </Button>
+actions={
+  <div className="flex flex-wrap gap-2">
+
+    <select
+      className="h-9 rounded border border-input bg-background px-3 text-sm"
+      value={importExamId}
+      onChange={(e) => setImportExamId(e.target.value)}
+    >
+      <option value="">Select Exam</option>
+      {(exams ?? []).map((e) => (
+        <option key={e.id} value={e.id}>
+          {e.title}
+        </option>
+      ))}
+    </select>
+
+    <select
+      className="h-9 rounded border border-input bg-background px-3 text-sm"
+      value={importQuizId}
+      onChange={(e) => setImportQuizId(e.target.value)}
+    >
+      <option value="">Select Quiz</option>
+      {(quizzes ?? []).map((q) => (
+        <option key={q.id} value={q.id}>
+          {q.title}
+        </option>
+      ))}
+    </select>
+
+    <select
+      className="h-9 rounded border border-input bg-background px-3 text-sm"
+      value={importTopicMockId}
+      onChange={(e) => setImportTopicMockId(e.target.value)}
+    >
+      <option value="">Select Topic Mock</option>
+      {(topicMocks ?? []).map((t) => (
+        <option key={t.id} value={t.id}>
+          {t.title}
+        </option>
+      ))}
+    </select>
+
+    <input
+      type="file"
+      accept=".txt"
+      id="txt-upload"
+      className="hidden"
+      onChange={async (e) => {
+
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        const text = await file.text();
+
+        try {
+
+          const res = await fetch(
+            "/api/questions/import",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                text,
+                examId: importExamId || undefined,
+                quizId: importQuizId || undefined,
+                topicMockId: importTopicMockId || undefined,
+              }),
+            }
+          );
+
+          if (!res.ok) {
+            throw new Error("Import failed");
+          }
+
+          qc.invalidateQueries({
+            queryKey: getListQuestionsQueryKey({}),
+          });
+
+          toast({
+            title: "Questions imported successfully",
+          });
+
+        } catch {
+
+          toast({
+            title: "Import failed",
+            variant: "destructive",
+          });
         }
+      }}
+    />
+
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={() =>
+        document
+          .getElementById("txt-upload")
+          ?.click()
+      }
+    >
+      Import TXT
+    </Button>
+
+    <Button
+      data-testid="button-create-question"
+      size="sm"
+      onClick={openCreate}
+    >
+      <Plus size={14} className="mr-1" />
+      Add Question
+    </Button>
+
+  </div>
+}
       />
 
       <div className="p-6 space-y-4">
@@ -268,7 +409,7 @@ export default function AdminQuestionsPage() {
                   </FormItem>
                 )} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              {/* <div className="grid grid-cols-2 gap-3">
                 <FormField control={form.control} name="examId" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assign to Exam</FormLabel>
@@ -295,7 +436,94 @@ export default function AdminQuestionsPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
-              </div>
+              </div> */}
+              <div className="grid grid-cols-3 gap-3">
+
+  <FormField
+    control={form.control}
+    name="examId"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Assign to Exam</FormLabel>
+        <FormControl>
+          <select
+            className="w-full h-9 rounded border border-input bg-background px-3 text-sm"
+            value={field.value ?? ""}
+            onChange={(e) =>
+              field.onChange(
+                e.target.value ? Number(e.target.value) : undefined
+              )
+            }
+          >
+            <option value="">None</option>
+            {(exams ?? []).map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.title}
+              </option>
+            ))}
+          </select>
+        </FormControl>
+      </FormItem>
+    )}
+  />
+
+  <FormField
+    control={form.control}
+    name="quizId"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Assign to Quiz</FormLabel>
+        <FormControl>
+          <select
+            className="w-full h-9 rounded border border-input bg-background px-3 text-sm"
+            value={field.value ?? ""}
+            onChange={(e) =>
+              field.onChange(
+                e.target.value ? Number(e.target.value) : undefined
+              )
+            }
+          >
+            <option value="">None</option>
+            {(quizzes ?? []).map((q) => (
+              <option key={q.id} value={q.id}>
+                {q.title}
+              </option>
+            ))}
+          </select>
+        </FormControl>
+      </FormItem>
+    )}
+  />
+
+  <FormField
+    control={form.control}
+    name="topicMockId"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Assign to Topic Mock</FormLabel>
+        <FormControl>
+          <select
+            className="w-full h-9 rounded border border-input bg-background px-3 text-sm"
+            value={field.value ?? ""}
+            onChange={(e) =>
+              field.onChange(
+                e.target.value ? Number(e.target.value) : undefined
+              )
+            }
+          >
+            <option value="">None</option>
+            {(topicMocks ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+          </select>
+        </FormControl>
+      </FormItem>
+    )}
+  />
+
+</div>
               <FormField control={form.control} name="explanation" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Explanation (optional)</FormLabel>

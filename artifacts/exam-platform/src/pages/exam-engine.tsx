@@ -139,10 +139,18 @@ export default function ExamEnginePage() {
     };
   }, [started, id]);
 
-  const handleAutoSubmit = () => {
-    updateAttempt.mutate({ id, data: { answers, timeRemaining: 0, currentSection: 0 } });
-    submitAttempt.mutate({ id });
-  };
+const handleAutoSubmit = async () => {
+  await updateAttempt.mutateAsync({
+    id,
+    data: {
+      answers,
+      timeRemaining: 0,
+      currentSection: 0,
+    },
+  });
+
+  submitAttempt.mutate({ id });
+};
 
   const handleSelectOption = (option: string) => {
     const q = questions[currentIdx];
@@ -166,11 +174,20 @@ export default function ExamEnginePage() {
     );
   };
 
-  const handleSubmit = () => {
-    updateAttempt.mutate({ id, data: { answers, timeRemaining: timeRemaining ?? 0, currentSection: 0 } });
-    setShowSubmitDialog(false);
-    submitAttempt.mutate({ id });
-  };
+const handleSubmit = async () => {
+  await updateAttempt.mutateAsync({
+    id,
+    data: {
+      answers,
+      timeRemaining: timeRemaining ?? 0,
+      currentSection: 0,
+    },
+  });
+
+  setShowSubmitDialog(false);
+
+  submitAttempt.mutate({ id });
+};
 
   const getQuestionStatus = (qId: number): "answered" | "marked" | "visited" | "not-visited" => {
     const a = answers.find((x) => x.questionId === qId);
@@ -255,7 +272,7 @@ export default function ExamEnginePage() {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <header className="h-12 flex items-center justify-between px-4 border-b border-border bg-card flex-shrink-0">
+      <header className="min-h-12 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-4 py-2 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">{(attempt as unknown as { examTitle?: string })?.examTitle ?? "Exam"}</span>
           <Badge variant="secondary" className="text-xs">
@@ -281,9 +298,9 @@ export default function ExamEnginePage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         {/* Question area */}
-        <div className="flex-1 flex flex-col overflow-auto p-6">
+       <div className="flex-1 flex flex-col overflow-auto p-3 sm:p-4 lg:p-6">
           {currentQuestion ? (
             <>
               <div className="mb-6">
@@ -313,7 +330,7 @@ export default function ExamEnginePage() {
               </div>
 
               {/* Nav buttons */}
-              <div className="flex items-center justify-between mt-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mt-8">
                 <Button
                   data-testid="button-prev"
                   variant="outline"
@@ -347,7 +364,7 @@ export default function ExamEnginePage() {
         </div>
 
         {/* Question palette */}
-        <aside className="w-56 border-l border-border bg-card flex flex-col flex-shrink-0 overflow-auto">
+       <aside className="w-full lg:w-56 border-t lg:border-t-0 lg:border-l border-border bg-card flex flex-col flex-shrink-0 overflow-auto max-h-56 lg:max-h-full">
           <div className="p-3 border-b border-border">
             <p className="text-xs font-semibold text-muted-foreground mb-2">Question Palette</p>
             <div className="grid grid-cols-2 gap-1 text-xs">
@@ -363,7 +380,7 @@ export default function ExamEnginePage() {
               ))}
             </div>
           </div>
-          <div className="p-3 grid grid-cols-5 gap-1.5 overflow-auto">
+          <div className="p-3 grid grid-cols-6 sm:grid-cols-8 lg:grid-cols-5 gap-1.5 overflow-auto">
             {questions.map((q, idx) => {
               const status = getQuestionStatus(q.id);
               return (

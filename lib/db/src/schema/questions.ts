@@ -19,6 +19,8 @@ export const questionsTable = pgTable("questions", {
   sectionId: integer("section_id"),
   subjectId: integer("subject_id"),
   topicId: integer("topic_id"),
+  quizId: integer("quiz_id"),
+  topicMockId: integer("topic_mock_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
