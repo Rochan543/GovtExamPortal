@@ -254,8 +254,8 @@ export default function AdminFeedsPage() {
                 </FormItem>
               )} />
 
-              <FormItem>
-                <FormLabel>Image (optional)</FormLabel>
+              <div className="space-y-1">
+                <label className="text-sm font-medium leading-none">Image (optional)</label>
                 <div className="space-y-2">
                   {imagePreview ? (
                     <div className="relative w-full h-40 rounded overflow-hidden border border-input">
@@ -297,7 +297,7 @@ export default function AdminFeedsPage() {
                     onChange={handleFileSelect}
                   />
                 </div>
-              </FormItem>
+              </div>
 
               <FormField control={form.control} name="isPublished" render={({ field }) => (
                 <FormItem>

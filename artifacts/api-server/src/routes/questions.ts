@@ -96,8 +96,8 @@ router.post("/questions/import", authenticate, requireAdmin, async (req, res): P
   }
 
   try {
-    const separators = /\n{2,}|---+/g;
-    const blocks = text.split(separators).map(b => b.trim()).filter(b => b.length > 0);
+    const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const blocks = normalized.split(/\n{2,}/).map(b => b.trim()).filter(b => b.length > 0);
 
     const parsedQuestions: {
       questionText: string;
