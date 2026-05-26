@@ -1,15 +1,8 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import path from "path";
-import fs from "fs";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
-
-const uploadsDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 const app: Express = express();
 
@@ -42,8 +35,6 @@ app.use(
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-app.use("/api/uploads", express.static(uploadsDir));
 
 app.use("/api", router);
 
