@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   useListFeeds, getListFeedsQueryKey,
   useCreateFeed, useUpdateFeed, useDeleteFeed,
@@ -16,22 +16,39 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Rss, Image } from "lucide-react";
+import { Plus, Trash2, Pencil, Rss, ImageIcon, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const feedSchema = z.object({
   title: z.string().min(1, "Required"),
   description: z.string().min(1, "Required"),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  imageUrl: z.string().optional(),
   isPublished: z.boolean().default(false),
 });
 type FeedForm = z.infer<typeof feedSchema>;
+
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  if (!res.ok) throw new Error("Image upload failed");
+  const data = await res.json() as { url: string };
+  return data.url;
+}
 
 export default function AdminFeedsPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Feed | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const params = {};
   const { data: feeds, isLoading } = useListFeeds(params, { query: { queryKey: getListFeedsQueryKey(params) } });
@@ -47,6 +64,7 @@ export default function AdminFeedsPage() {
         qc.invalidateQueries({ queryKey: getListFeedsQueryKey({}) });
         setOpen(false);
         form.reset();
+        setImagePreview(null);
         toast({ title: "Feed post created" });
       },
     },
@@ -58,6 +76,7 @@ export default function AdminFeedsPage() {
         qc.invalidateQueries({ queryKey: getListFeedsQueryKey({}) });
         setOpen(false);
         setEditing(null);
+        setImagePreview(null);
         toast({ title: "Feed post updated" });
       },
     },
@@ -75,6 +94,7 @@ export default function AdminFeedsPage() {
   const openCreate = () => {
     setEditing(null);
     form.reset({ title: "", description: "", imageUrl: "", isPublished: false });
+    setImagePreview(null);
     setOpen(true);
   };
 
@@ -86,10 +106,43 @@ export default function AdminFeedsPage() {
       imageUrl: f.imageUrl ?? "",
       isPublished: f.isPublished,
     });
+    setImagePreview(f.imageUrl ?? null);
     setOpen(true);
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const localPreview = URL.createObjectURL(file);
+    setImagePreview(localPreview);
+    setImageUploading(true);
+
+    try {
+      const url = await uploadImage(file);
+      form.setValue("imageUrl", url);
+      toast({ title: "Image uploaded" });
+    } catch {
+      setImagePreview(null);
+      form.setValue("imageUrl", "");
+      toast({ title: "Image upload failed", variant: "destructive" });
+    } finally {
+      setImageUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeImage = () => {
+    form.setValue("imageUrl", "");
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const onSubmit = (data: FeedForm) => {
+    if (imageUploading) {
+      toast({ title: "Please wait for image upload to finish", variant: "destructive" });
+      return;
+    }
     const payload = {
       ...data,
       imageUrl: data.imageUrl || undefined,
@@ -129,17 +182,16 @@ export default function AdminFeedsPage() {
             <Card key={feed.id}>
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-start gap-4">
-                  {feed.imageUrl && (
+                  {feed.imageUrl ? (
                     <img
                       src={feed.imageUrl}
                       alt={feed.title}
                       className="w-16 h-16 object-cover rounded flex-shrink-0"
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
-                  )}
-                  {!feed.imageUrl && (
+                  ) : (
                     <div className="w-16 h-16 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                      <Image size={20} className="text-muted-foreground" />
+                      <ImageIcon size={20} className="text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -174,7 +226,7 @@ export default function AdminFeedsPage() {
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => { if (!v) { setImagePreview(null); } setOpen(v); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Post" : "New Feed Post"}</DialogTitle>
@@ -201,13 +253,52 @@ export default function AdminFeedsPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="imageUrl" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image URL (optional)</FormLabel>
-                  <FormControl><Input placeholder="https://example.com/image.jpg" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+
+              <FormItem>
+                <FormLabel>Image (optional)</FormLabel>
+                <div className="space-y-2">
+                  {imagePreview ? (
+                    <div className="relative w-full h-40 rounded overflow-hidden border border-input">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      {imageUploading && (
+                        <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                          <span className="text-sm text-muted-foreground">Uploading…</span>
+                        </div>
+                      )}
+                      {!imageUploading && (
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute top-1 right-1 bg-background/80 rounded-full p-0.5 hover:bg-destructive hover:text-white transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-24 rounded border border-dashed border-input flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-foreground/40 transition-colors"
+                    >
+                      <Upload size={18} />
+                      <span className="text-xs">Click to upload image</span>
+                    </button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </div>
+              </FormItem>
+
               <FormField control={form.control} name="isPublished" render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center gap-2">
@@ -225,8 +316,8 @@ export default function AdminFeedsPage() {
               )} />
               <div className="flex gap-2 pt-1">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button type="submit" className="flex-1" disabled={createFeed.isPending || updateFeed.isPending}>
-                  {editing ? "Save" : "Create"}
+                <Button type="submit" className="flex-1" disabled={createFeed.isPending || updateFeed.isPending || imageUploading}>
+                  {imageUploading ? "Uploading…" : editing ? "Save" : "Create"}
                 </Button>
               </div>
             </form>

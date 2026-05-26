@@ -215,25 +215,24 @@ actions={
 
         try {
 
-          const res = await fetch(
-            "/api/questions/import",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-              body: JSON.stringify({
-                text,
-                examId: importExamId || undefined,
-                quizId: importQuizId || undefined,
-                topicMockId: importTopicMockId || undefined,
-              }),
-            }
-          );
+          const token = localStorage.getItem("accessToken");
+          const res = await fetch("/api/questions/import", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              text,
+              examId: importExamId ? Number(importExamId) : undefined,
+              quizId: importQuizId ? Number(importQuizId) : undefined,
+              topicMockId: importTopicMockId ? Number(importTopicMockId) : undefined,
+            }),
+          });
 
           if (!res.ok) {
-            throw new Error("Import failed");
+            const errData = await res.json().catch(() => ({})) as { error?: string };
+            throw new Error(errData.error ?? "Import failed");
           }
 
           qc.invalidateQueries({
@@ -244,10 +243,11 @@ actions={
             title: "Questions imported successfully",
           });
 
-        } catch {
-
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Import failed";
           toast({
             title: "Import failed",
+            description: msg,
             variant: "destructive",
           });
         }

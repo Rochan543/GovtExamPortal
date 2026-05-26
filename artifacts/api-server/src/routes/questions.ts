@@ -1,8 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, questionsTable } from "@workspace/db";
-import { eq, and, ilike } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { authenticate, requireAdmin } from "../middlewares/authenticate";
-
 
 const router: IRouter = Router();
 
@@ -20,130 +19,135 @@ router.get("/questions", authenticate, async (req, res): Promise<void> => {
 
   res.json(questions);
 });
-router.post(
-  "/questions/import",
-  authenticate,
-  requireAdmin,
-  async (req, res): Promise<void> => {
 
-    const {
-      text,
-      examId,
-      quizId,
-      topicMockId,
-    } = req.body;
+function parseQuestionBlock(block: string): {
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: string;
+  explanation: string;
+  marks: number;
+  negativeMarks: number;
+  difficulty?: string;
+} | null {
+  const lines = block.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return null;
 
-    if (!text) {
+  const getField = (prefixes: string[]): string => {
+    for (const line of lines) {
+      for (const prefix of prefixes) {
+        if (line.toLowerCase().startsWith(prefix.toLowerCase())) {
+          return line.slice(prefix.length).trim();
+        }
+      }
+    }
+    return "";
+  };
+
+  const getOption = (letter: string): string => {
+    const prefixes = [
+      `${letter}.`, `${letter})`, `${letter}:`,
+      `option ${letter}:`, `option${letter}:`,
+    ];
+    return getField(prefixes);
+  };
+
+  const questionText = getField(["Question:", "Q:", "Q."]);
+  const optionA = getOption("A");
+  const optionB = getOption("B");
+  const optionC = getOption("C");
+  const optionD = getOption("D");
+  const correctAnswer = getField(["Answer:", "Correct Answer:", "Correct:", "Ans:"]).replace(/^[()]/g, "").trim().toUpperCase().charAt(0) || "A";
+  const explanation = getField(["Explanation:", "Exp:", "Solution:"]);
+  const difficultyRaw = getField(["Difficulty:", "Level:"]);
+  const marksRaw = getField(["Marks:", "Mark:"]);
+  const negativeMarksRaw = getField(["NegativeMarks:", "Negative Marks:", "Negative:"]);
+
+  if (!questionText || !optionA || !optionB || !optionC || !optionD) {
+    return null;
+  }
+
+  if (!["A", "B", "C", "D"].includes(correctAnswer)) {
+    return null;
+  }
+
+  return {
+    questionText,
+    optionA,
+    optionB,
+    optionC,
+    optionD,
+    correctAnswer,
+    explanation,
+    marks: marksRaw ? Number(marksRaw) || 1 : 1,
+    negativeMarks: negativeMarksRaw ? Number(negativeMarksRaw) || 0 : 0,
+    difficulty: difficultyRaw || undefined,
+  };
+}
+
+router.post("/questions/import", authenticate, requireAdmin, async (req, res): Promise<void> => {
+  const { text, examId, quizId, topicMockId, sectionId, subjectId, topicId } = req.body;
+
+  if (!text || typeof text !== "string") {
+    res.status(400).json({ error: "TXT content is required" });
+    return;
+  }
+
+  try {
+    const separators = /\n{2,}|---+/g;
+    const blocks = text.split(separators).map(b => b.trim()).filter(b => b.length > 0);
+
+    const parsedQuestions: {
+      questionText: string;
+      optionA: string;
+      optionB: string;
+      optionC: string;
+      optionD: string;
+      correctAnswer: string;
+      explanation: string;
+      marks: number;
+      negativeMarks: number;
+      difficulty?: string;
+      examId?: number;
+      quizId?: number;
+      topicMockId?: number;
+      sectionId?: number;
+      subjectId?: number;
+      topicId?: number;
+    }[] = [];
+
+    for (const block of blocks) {
+      const parsed = parseQuestionBlock(block);
+      if (!parsed) continue;
+
+      parsedQuestions.push({
+        ...parsed,
+        examId: examId ? Number(examId) : undefined,
+        quizId: quizId ? Number(quizId) : undefined,
+        topicMockId: topicMockId ? Number(topicMockId) : undefined,
+        sectionId: sectionId ? Number(sectionId) : undefined,
+        subjectId: subjectId ? Number(subjectId) : undefined,
+        topicId: topicId ? Number(topicId) : undefined,
+      });
+    }
+
+    if (parsedQuestions.length === 0) {
       res.status(400).json({
-        error: "TXT content required",
+        error: "No valid questions found in the file. Make sure the format includes Question:, A., B., C., D., and Answer: fields.",
       });
       return;
     }
 
-    try {
+    await db.insert(questionsTable).values(parsedQuestions);
 
-      const blocks = text
-        .split("\n\n")
-        .filter((b: string) => b.trim());
-
-      const parsedQuestions = blocks.map((block: string) => {
-
-        const lines = block
-          .split("\n")
-          .map((l) => l.trim());
-
-        return {
-
-          questionText:
-            lines.find((l) =>
-              l.startsWith("Question:")
-            )
-              ?.replace("Question:", "")
-              .trim() ?? "",
-
-          optionA:
-            lines.find((l) => l.startsWith("A."))
-              ?.replace("A.", "")
-              .trim() ?? "",
-
-          optionB:
-            lines.find((l) => l.startsWith("B."))
-              ?.replace("B.", "")
-              .trim() ?? "",
-
-          optionC:
-            lines.find((l) => l.startsWith("C."))
-              ?.replace("C.", "")
-              .trim() ?? "",
-
-          optionD:
-            lines.find((l) => l.startsWith("D."))
-              ?.replace("D.", "")
-              .trim() ?? "",
-
-          correctAnswer:
-            lines.find((l) =>
-              l.startsWith("Answer:")
-            )
-              ?.replace("Answer:", "")
-              .trim() ?? "A",
-
-          explanation:
-            lines.find((l) =>
-              l.startsWith("Explanation:")
-            )
-              ?.replace("Explanation:", "")
-              .trim() ?? "",
-
-          marks: Number(
-            lines.find((l) =>
-              l.startsWith("Marks:")
-            )
-              ?.replace("Marks:", "")
-              .trim() ?? 1
-          ),
-
-          negativeMarks: Number(
-            lines.find((l) =>
-              l.startsWith("NegativeMarks:")
-            )
-              ?.replace("NegativeMarks:", "")
-              .trim() ?? 0
-          ),
-
-          examId: examId
-            ? Number(examId)
-            : undefined,
-
-          quizId: quizId
-            ? Number(quizId)
-            : undefined,
-
-          topicMockId: topicMockId
-            ? Number(topicMockId)
-            : undefined,
-        };
-      });
-
-      await db
-        .insert(questionsTable)
-        .values(parsedQuestions);
-
-      res.status(201).json({
-        success: true,
-        count: parsedQuestions.length,
-      });
-
-    } catch (error) {
-
-      console.error(error);
-
-      res.status(500).json({
-        error: "Failed to import questions",
-      });
-    }
+    res.status(201).json({ success: true, count: parsedQuestions.length });
+  } catch (error) {
+    console.error("Import error:", error);
+    res.status(500).json({ error: "Failed to import questions" });
   }
-);
+});
 
 router.post("/questions", authenticate, requireAdmin, async (req, res): Promise<void> => {
   const { questionText, optionA, optionB, optionC, optionD, correctAnswer, marks, ...rest } = req.body;
