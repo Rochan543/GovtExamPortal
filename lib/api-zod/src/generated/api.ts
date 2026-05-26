@@ -248,6 +248,8 @@ export const GetExamResponse = zod.object({
   "sectionId": zod.number().nullish(),
   "subjectId": zod.number().nullish(),
   "topicId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
+  "topicMockId": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -520,6 +522,8 @@ export const ListQuestionsResponseItem = zod.object({
   "sectionId": zod.number().nullish(),
   "subjectId": zod.number().nullish(),
   "topicId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
+  "topicMockId": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListQuestionsResponse = zod.array(ListQuestionsResponseItem)
@@ -543,7 +547,9 @@ export const CreateQuestionBody = zod.object({
   "examId": zod.number().optional(),
   "sectionId": zod.number().optional(),
   "subjectId": zod.number().optional(),
-  "topicId": zod.number().optional()
+  "topicId": zod.number().optional(),
+  "quizId": zod.number().optional(),
+  "topicMockId": zod.number().optional()
 })
 
 
@@ -571,6 +577,8 @@ export const GetQuestionResponse = zod.object({
   "sectionId": zod.number().nullish(),
   "subjectId": zod.number().nullish(),
   "topicId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
+  "topicMockId": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -597,7 +605,9 @@ export const UpdateQuestionBody = zod.object({
   "examId": zod.number().optional(),
   "sectionId": zod.number().optional(),
   "subjectId": zod.number().optional(),
-  "topicId": zod.number().optional()
+  "topicId": zod.number().optional(),
+  "quizId": zod.number().optional(),
+  "topicMockId": zod.number().optional()
 })
 
 export const UpdateQuestionResponse = zod.object({
@@ -617,6 +627,8 @@ export const UpdateQuestionResponse = zod.object({
   "sectionId": zod.number().nullish(),
   "subjectId": zod.number().nullish(),
   "topicId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
+  "topicMockId": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -940,6 +952,8 @@ export const GetAttemptResponse = zod.object({
   "sectionId": zod.number().nullish(),
   "subjectId": zod.number().nullish(),
   "topicId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
+  "topicMockId": zod.number().nullish(),
   "createdAt": zod.coerce.date()
 })),
   "sections": zod.array(zod.object({
@@ -1195,6 +1209,87 @@ export const GetViolationsResponseItem = zod.object({
   "createdAt": zod.coerce.date()
 })
 export const GetViolationsResponse = zod.array(GetViolationsResponseItem)
+
+
+/**
+ * @summary List feed posts
+ */
+export const ListFeedsQueryParams = zod.object({
+  "published": zod.coerce.boolean().optional()
+})
+
+export const ListFeedsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().nullish()
+})
+export const ListFeedsResponse = zod.array(ListFeedsResponseItem)
+
+
+/**
+ * @summary Create feed post (admin)
+ */
+export const CreateFeedBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string().optional(),
+  "isPublished": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get feed by ID
+ */
+export const GetFeedParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetFeedResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Update feed post (admin)
+ */
+export const UpdateFeedParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateFeedBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "imageUrl": zod.string().optional(),
+  "isPublished": zod.boolean().optional()
+})
+
+export const UpdateFeedResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Delete feed post (admin)
+ */
+export const DeleteFeedParams = zod.object({
+  "id": zod.coerce.number()
+})
 
 
 /**

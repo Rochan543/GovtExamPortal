@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen, LayoutDashboard, FileText, Zap, BookMarked, PenTool,
-  LogOut, User, ChevronRight, Menu, X
+  LogOut, User, ChevronRight, Menu, X, Rss
 } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ const studentNav = [
   { label: "Topic Mocks", href: "/topic-mocks", icon: PenTool },
   { label: "Papers", href: "/papers", icon: FileText },
   { label: "My Results", href: "/results", icon: BookMarked },
+  { label: "News Feed", href: "/feeds", icon: Rss },
 ];
 
 const adminNav = [
@@ -25,6 +26,7 @@ const adminNav = [
   { label: "Subjects", href: "/admin/subjects", icon: BookMarked },
   { label: "Sections", href: "/admin/sections", icon: FileText },
   { label: "Papers", href: "/admin/papers", icon: FileText },
+  { label: "Feed Panel", href: "/admin/feeds", icon: Rss },
   { label: "Users", href: "/admin/users", icon: User },
   { label: "Analytics", href: "/admin/analytics", icon: LayoutDashboard },
 ];

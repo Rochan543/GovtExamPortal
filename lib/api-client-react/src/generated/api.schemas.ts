@@ -121,6 +121,10 @@ export interface Question {
   subjectId?: number | null;
   /** @nullable */
   topicId?: number | null;
+  /** @nullable */
+  quizId?: number | null;
+  /** @nullable */
+  topicMockId?: number | null;
   createdAt: string;
 }
 
@@ -240,6 +244,8 @@ export interface QuestionInput {
   sectionId?: number;
   subjectId?: number;
   topicId?: number;
+  quizId?: number;
+  topicMockId?: number;
 }
 
 export interface QuestionUpdate {
@@ -258,6 +264,8 @@ export interface QuestionUpdate {
   sectionId?: number;
   subjectId?: number;
   topicId?: number;
+  quizId?: number;
+  topicMockId?: number;
 }
 
 export interface TopicMock {
@@ -535,6 +543,32 @@ export interface PaperInput {
   description?: string;
 }
 
+export interface Feed {
+  id: number;
+  title: string;
+  description: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  isPublished: boolean;
+  createdAt: string;
+  /** @nullable */
+  updatedAt?: string | null;
+}
+
+export interface FeedInput {
+  title: string;
+  description: string;
+  imageUrl?: string;
+  isPublished?: boolean;
+}
+
+export interface FeedUpdate {
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  isPublished?: boolean;
+}
+
 export type ViolationViolationType = typeof ViolationViolationType[keyof typeof ViolationViolationType];
 
 
@@ -674,5 +708,9 @@ status?: string;
 export type ListPapersParams = {
 examType?: string;
 year?: number;
+};
+
+export type ListFeedsParams = {
+published?: boolean;
 };
 

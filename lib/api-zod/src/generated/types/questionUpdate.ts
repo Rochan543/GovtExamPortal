@@ -22,4 +22,6 @@ export interface QuestionUpdate {
   sectionId?: number;
   subjectId?: number;
   topicId?: number;
+  quizId?: number;
+  topicMockId?: number;
 }

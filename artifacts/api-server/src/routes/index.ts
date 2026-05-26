@@ -13,6 +13,7 @@ import resultsRouter from "./results";
 import papersRouter from "./papers";
 import violationsRouter from "./violations";
 import dashboardRouter from "./dashboard";
+import feedsRouter from "./feeds";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(resultsRouter);
 router.use(papersRouter);
 router.use(violationsRouter);
 router.use(dashboardRouter);
+router.use(feedsRouter);
 
 export default router;

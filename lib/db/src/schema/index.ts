@@ -10,3 +10,4 @@ export * from "./attempts";
 export * from "./results";
 export * from "./papers";
 export * from "./violations";
+export * from "./feeds";

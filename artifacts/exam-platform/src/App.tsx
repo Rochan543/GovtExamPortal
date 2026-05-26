@@ -33,6 +33,8 @@ import AdminSectionsPage from "@/pages/admin/sections";
 import AdminTopicMocksPage from "@/pages/admin/topic-mocks";
 import AdminQuizzesPage from "@/pages/admin/quizzes";
 import AdminPapersPage from "@/pages/admin/papers";
+import AdminFeedsPage from "@/pages/admin/feeds";
+import FeedsPage from "@/pages/feeds";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +94,9 @@ function Router() {
       <Route path="/profile">
         <ProtectedRoute><ProfilePage /></ProtectedRoute>
       </Route>
+      <Route path="/feeds">
+        <ProtectedRoute><FeedsPage /></ProtectedRoute>
+      </Route>
 
       {/* Admin */}
       <Route path="/admin">
@@ -123,6 +128,9 @@ function Router() {
       </Route>
       <Route path="/admin/papers">
         <ProtectedRoute adminOnly><AdminPapersPage /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/feeds">
+        <ProtectedRoute adminOnly><AdminFeedsPage /></ProtectedRoute>
       </Route>
 
       <Route component={NotFound} />

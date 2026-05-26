@@ -30,5 +30,9 @@ export interface Question {
   subjectId?: number | null;
   /** @nullable */
   topicId?: number | null;
+  /** @nullable */
+  quizId?: number | null;
+  /** @nullable */
+  topicMockId?: number | null;
   createdAt: Date;
 }

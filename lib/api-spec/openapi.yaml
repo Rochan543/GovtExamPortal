@@ -38,6 +38,8 @@ tags:
     description: Anti-cheat violations
   - name: dashboard
     description: Dashboard analytics
+  - name: feeds
+    description: News feed management
 
 paths:
   /healthz:
@@ -1175,6 +1177,99 @@ paths:
                 items:
                   $ref: "#/components/schemas/Violation"
 
+  # FEEDS
+  /feeds:
+    get:
+      operationId: listFeeds
+      tags: [feeds]
+      summary: List feed posts
+      parameters:
+        - name: published
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of feeds
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Feed"
+    post:
+      operationId: createFeed
+      tags: [feeds]
+      summary: Create feed post (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedInput"
+      responses:
+        "201":
+          description: Created feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feed"
+
+  /feeds/{id}:
+    get:
+      operationId: getFeed
+      tags: [feeds]
+      summary: Get feed by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feed"
+    patch:
+      operationId: updateFeed
+      tags: [feeds]
+      summary: Update feed post (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedUpdate"
+      responses:
+        "200":
+          description: Updated feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feed"
+    delete:
+      operationId: deleteFeed
+      tags: [feeds]
+      summary: Delete feed post (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   # DASHBOARD
   /dashboard/admin:
     get:
@@ -1596,6 +1691,10 @@ components:
           type: ["integer", "null"]
         topicId:
           type: ["integer", "null"]
+        quizId:
+          type: ["integer", "null"]
+        topicMockId:
+          type: ["integer", "null"]
         createdAt:
           type: string
           format: date-time
@@ -1634,6 +1733,10 @@ components:
           type: integer
         topicId:
           type: integer
+        quizId:
+          type: integer
+        topicMockId:
+          type: integer
 
     QuestionUpdate:
       type: object
@@ -1667,6 +1770,10 @@ components:
         subjectId:
           type: integer
         topicId:
+          type: integer
+        quizId:
+          type: integer
+        topicMockId:
           type: integer
 
     # TOPIC MOCKS
@@ -2111,6 +2218,53 @@ components:
           type: string
         description:
           type: string
+
+    # FEEDS
+    Feed:
+      type: object
+      required: [id, title, description, isPublished, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        isPublished:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    FeedInput:
+      type: object
+      required: [title, description]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        isPublished:
+          type: boolean
+
+    FeedUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        isPublished:
+          type: boolean
 
     # VIOLATIONS
     Violation:

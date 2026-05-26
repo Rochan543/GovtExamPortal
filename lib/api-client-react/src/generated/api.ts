@@ -32,10 +32,14 @@ import type {
   ExamDetail,
   ExamInput,
   ExamUpdate,
+  Feed,
+  FeedInput,
+  FeedUpdate,
   HealthStatus,
   LeaderboardEntry,
   ListAttemptsParams,
   ListExamsParams,
+  ListFeedsParams,
   ListPapersParams,
   ListQuestionsParams,
   ListQuizzesParams,
@@ -4449,6 +4453,378 @@ export function useGetViolations<TData = Awaited<ReturnType<typeof getViolations
 
 
 
+
+export const getListFeedsUrl = (params?: ListFeedsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/feeds?${stringifiedParams}` : `/api/feeds`
+}
+
+/**
+ * @summary List feed posts
+ */
+export const listFeeds = async (params?: ListFeedsParams, options?: RequestInit): Promise<Feed[]> => {
+
+  return customFetch<Feed[]>(getListFeedsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFeedsQueryKey = (params?: ListFeedsParams,) => {
+    return [
+    `/api/feeds`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListFeedsQueryOptions = <TData = Awaited<ReturnType<typeof listFeeds>>, TError = ErrorType<unknown>>(params?: ListFeedsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFeeds>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFeedsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeeds>>> = ({ signal }) => listFeeds(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFeeds>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListFeedsQueryResult = NonNullable<Awaited<ReturnType<typeof listFeeds>>>
+export type ListFeedsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List feed posts
+ */
+
+export function useListFeeds<TData = Awaited<ReturnType<typeof listFeeds>>, TError = ErrorType<unknown>>(
+ params?: ListFeedsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFeeds>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListFeedsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateFeedUrl = () => {
+
+
+
+
+  return `/api/feeds`
+}
+
+/**
+ * @summary Create feed post (admin)
+ */
+export const createFeed = async (feedInput: FeedInput, options?: RequestInit): Promise<Feed> => {
+
+  return customFetch<Feed>(getCreateFeedUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(feedInput)
+  }
+);}
+
+
+
+
+export const getCreateFeedMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFeed>>, TError,{data: BodyType<FeedInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createFeed>>, TError,{data: BodyType<FeedInput>}, TContext> => {
+
+const mutationKey = ['createFeed'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createFeed>>, {data: BodyType<FeedInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createFeed(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateFeedMutationResult = NonNullable<Awaited<ReturnType<typeof createFeed>>>
+    export type CreateFeedMutationBody = BodyType<FeedInput>
+    export type CreateFeedMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create feed post (admin)
+ */
+export const useCreateFeed = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFeed>>, TError,{data: BodyType<FeedInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createFeed>>,
+        TError,
+        {data: BodyType<FeedInput>},
+        TContext
+      > => {
+      return useMutation(getCreateFeedMutationOptions(options));
+    }
+
+export const getGetFeedUrl = (id: number,) => {
+
+
+
+
+  return `/api/feeds/${id}`
+}
+
+/**
+ * @summary Get feed by ID
+ */
+export const getFeed = async (id: number, options?: RequestInit): Promise<Feed> => {
+
+  return customFetch<Feed>(getGetFeedUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFeedQueryKey = (id: number,) => {
+    return [
+    `/api/feeds/${id}`
+    ] as const;
+    }
+
+
+export const getGetFeedQueryOptions = <TData = Awaited<ReturnType<typeof getFeed>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFeedQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeed>>> = ({ signal }) => getFeed(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getFeed>>>
+export type GetFeedQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get feed by ID
+ */
+
+export function useGetFeed<TData = Awaited<ReturnType<typeof getFeed>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFeedQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateFeedUrl = (id: number,) => {
+
+
+
+
+  return `/api/feeds/${id}`
+}
+
+/**
+ * @summary Update feed post (admin)
+ */
+export const updateFeed = async (id: number,
+    feedUpdate: FeedUpdate, options?: RequestInit): Promise<Feed> => {
+
+  return customFetch<Feed>(getUpdateFeedUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(feedUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateFeedMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFeed>>, TError,{id: number;data: BodyType<FeedUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateFeed>>, TError,{id: number;data: BodyType<FeedUpdate>}, TContext> => {
+
+const mutationKey = ['updateFeed'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateFeed>>, {id: number;data: BodyType<FeedUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateFeed(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateFeedMutationResult = NonNullable<Awaited<ReturnType<typeof updateFeed>>>
+    export type UpdateFeedMutationBody = BodyType<FeedUpdate>
+    export type UpdateFeedMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update feed post (admin)
+ */
+export const useUpdateFeed = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFeed>>, TError,{id: number;data: BodyType<FeedUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateFeed>>,
+        TError,
+        {id: number;data: BodyType<FeedUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateFeedMutationOptions(options));
+    }
+
+export const getDeleteFeedUrl = (id: number,) => {
+
+
+
+
+  return `/api/feeds/${id}`
+}
+
+/**
+ * @summary Delete feed post (admin)
+ */
+export const deleteFeed = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteFeedUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteFeedMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteFeed>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteFeed>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteFeed'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteFeed>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteFeed(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteFeedMutationResult = NonNullable<Awaited<ReturnType<typeof deleteFeed>>>
+
+    export type DeleteFeedMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete feed post (admin)
+ */
+export const useDeleteFeed = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteFeed>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteFeed>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteFeedMutationOptions(options));
+    }
 
 export const getGetAdminDashboardUrl = () => {
 
