@@ -54,4 +54,78 @@ router.delete("/feeds/:id", authenticate, requireAdmin, async (req, res): Promis
   res.sendStatus(204);
 });
 
+router.post(
+  "/feeds/:id/like",
+  authenticate,
+  async (req, res): Promise<void> => {
+
+    const id = parseInt(
+  Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id,
+  10
+);
+
+    const [feed] = await db
+      .select()
+      .from(feedsTable)
+      .where(eq(feedsTable.id, id));
+
+    if (!feed) {
+      res.status(404).json({
+        error: "Feed not found",
+      });
+
+      return;
+    }
+
+    const [updated] = await db
+      .update(feedsTable)
+      .set({
+        likes: feed.likes + 1,
+      })
+      .where(eq(feedsTable.id, id))
+      .returning();
+
+    res.json(updated);
+  }
+);
+
+router.post(
+  "/feeds/:id/share",
+  authenticate,
+  async (req, res): Promise<void> => {
+
+    const id = parseInt(
+  Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id,
+  10
+);
+
+    const [feed] = await db
+      .select()
+      .from(feedsTable)
+      .where(eq(feedsTable.id, id));
+
+    if (!feed) {
+      res.status(404).json({
+        error: "Feed not found",
+      });
+
+      return;
+    }
+
+    const [updated] = await db
+      .update(feedsTable)
+      .set({
+        shares: feed.shares + 1,
+      })
+      .where(eq(feedsTable.id, id))
+      .returning();
+
+    res.json(updated);
+  }
+);
+
 export default router;
